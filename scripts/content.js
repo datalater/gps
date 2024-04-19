@@ -155,7 +155,7 @@
       }
     }
 
-    function handleClick(event) {
+    async function handleClick(event) {
       if (event.altKey) {
         event.preventDefault();
         event.stopPropagation();
@@ -163,6 +163,7 @@
         isOptionKeyPressed = false;
 
         navigator.clipboard.writeText(source);
+        await showToast("Copied to clipboard: " + source);
 
         let projectPath = localStorage.getItem(LOCAL_STORAGE_KEY);
 
@@ -298,6 +299,46 @@
         tooltipElement.remove();
         tooltipElement = null;
       }
+    }
+
+    function showToast(text, duration = 3000) {
+      return new Promise((resolve) => {
+        const toast = document.createElement("div");
+        toast.textContent = text;
+        toast.style.position = "fixed";
+        toast.style.top = "20px";
+        toast.style.left = "20px";
+        toast.style.padding = "10px 20px";
+        toast.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+        toast.style.color = "#fff";
+        toast.style.borderRadius = "4px";
+        toast.style.zIndex = "9999";
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.3s ease-in-out";
+
+        document.body.appendChild(toast);
+
+        toast.addEventListener(
+          "transitionend",
+          () => {
+            resolve();
+          },
+          { once: true }
+        );
+
+        // 토스트 요소를 서서히 나타나게 함
+        setTimeout(() => {
+          toast.style.opacity = "1";
+        }, 100);
+
+        // duration 이후에 토스트 요소를 서서히 사라지게 함
+        setTimeout(() => {
+          toast.style.opacity = "0";
+          setTimeout(() => {
+            document.body.removeChild(toast);
+          }, 300);
+        }, duration);
+      });
     }
 
     document.addEventListener("click", handleClick, { capture: true });
