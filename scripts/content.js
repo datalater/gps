@@ -161,6 +161,7 @@
         event.stopPropagation();
 
         isOptionKeyPressed = false;
+        document.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.optionKeyUp));
 
         navigator.clipboard.writeText(source);
 
@@ -174,15 +175,10 @@
           }
         }
 
-        if (!projectPath) {
-          document.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.optionKeyUp));
-          return;
-        }
+        if (!projectPath) return;
 
         const path = `vscode://file${projectPath}/${source}`;
         window.open(path);
-
-        document.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.optionKeyUp));
       }
     }
 
