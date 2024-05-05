@@ -143,6 +143,8 @@
     let mouseX;
     let mouseY;
     let overlayInlinePosition = "right";
+    const overlayMargin = "10px";
+    const overlayPadding = "8px 12px";
 
     const showShortcutGuide = () =>
       showGuide("Press <br/> (c) to copy <br/> (p) to set project path");
@@ -289,7 +291,7 @@
         tooltipElement.style.color = "rgba(255, 255, 255, 1)";
         tooltipElement.style.minWidth = "min-content";
         tooltipElement.style.maxWidth = "38ch";
-        tooltipElement.style.padding = "8px 12px";
+        tooltipElement.style.padding = overlayPadding;
         tooltipElement.style.borderRadius = "4px";
         tooltipElement.style.overflowWrap = "break-word";
         tooltipElement.style.wordBreak = "keep-all";
@@ -356,12 +358,14 @@
         toast.className = "gps-toast";
         toast.innerHTML = text;
         toast.style.position = "fixed";
-        toast.style.top = "20px";
-        toast.style[overlayInlinePosition] = "20px";
-        toast.style.padding = "10px 20px";
+        toast.style.top = overlayMargin;
+        toast.style[overlayInlinePosition] = overlayMargin;
+        toast.style.padding = overlayPadding;
         toast.style.backgroundColor = "rgba(0, 0, 0, 1)";
         toast.style.color = "#fff";
         toast.style.borderRadius = "4px";
+        toast.style.fontSize = "14px";
+        toast.style.lineHeight = "1.4";
         toast.style.zIndex = Z_INDEX_TOAST;
         toast.style.opacity = "0";
         toast.style.transition = "opacity 0.3s ease-in-out";
@@ -401,12 +405,14 @@
         document.querySelector(".gps-guide") || document.createElement("div");
       guide.className = "gps-guide";
       guide.style.position = "fixed";
-      guide.style.top = "20px";
-      guide.style[overlayInlinePosition] = "20px";
-      guide.style.padding = "10px 20px";
+      guide.style.top = overlayMargin;
+      guide.style[overlayInlinePosition] = overlayMargin;
+      guide.style.padding = overlayPadding;
       guide.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
       guide.style.color = "#fff";
       guide.style.borderRadius = "4px";
+      guide.style.fontSize = "14px";
+      guide.style.lineHeight = "1.4";
       guide.style.zIndex = Z_INDEX_GUIDE;
       guide.innerHTML = text;
 
