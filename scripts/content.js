@@ -1,5 +1,8 @@
 (function fn() {
   const Z_INDEX_MAX = 2147483647;
+  const Z_INDEX_TOAST = Z_INDEX_MAX - 1;
+  const Z_INDEX_GUIDE = Z_INDEX_MAX - 2;
+  const Z_INDEX_TOOLTIP = Z_INDEX_MAX - 3;
   const LOCAL_STORAGE_KEY = "gps-project-path";
 
   say("GPS - Get Position of Source code is running.");
@@ -37,17 +40,19 @@
 
   (function initProjectPathHandler() {
     function handleKeyDown(event) {
-      if (event.altKey && event.shiftKey && event.code === "KeyP") {
-        isOptionKeyPressed = false;
-
+      if (event.altKey && event.code === "KeyP") {
         const currentProjectPath = localStorage.getItem(LOCAL_STORAGE_KEY);
 
         const projectPath = prompt(
           `Project path를 설정해주세요.\n\ncurrent: ${currentProjectPath}`
         );
+
         if (projectPath) {
           localStorage.setItem(LOCAL_STORAGE_KEY, projectPath);
         }
+
+        isOptionKeyPressed = false;
+        document.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.optionKeyUp));
       }
     }
 
@@ -133,20 +138,32 @@
   (function locator() {
     let el = null;
     let source = null;
-    let projectPath = null;
     let tooltipElement = null;
     let hoveredElement = null;
+
+    const showShortcutGuide = () =>
+      showGuide("Press (c) to copy / (p) to set project path");
+
+    async function handleKeyDown(event) {
+      if (source && event.altKey && event.code === "KeyC") {
+        navigator.clipboard.writeText(source);
+
+        await showToast("Copied to clipboard");
+      }
+    }
 
     function handleOptionKeyDown() {
       if (hoveredElement) {
         el = hoveredElement;
         source = getSource(el);
         showTooltip(el);
+        showShortcutGuide();
       }
     }
 
     function handleOptionKeyUp() {
       hideTooltip();
+      hideGuide();
     }
 
     function handleMouseOver(event) {
@@ -159,6 +176,7 @@
       source = getSource(el);
 
       showTooltip(el);
+      showShortcutGuide();
     }
 
     function handleMouseOut(event) {
@@ -167,6 +185,7 @@
       if (el === event.target) {
         el = null;
         hideTooltip();
+        hideGuide();
       }
     }
 
@@ -236,6 +255,7 @@
       const reactRenderer = Array.from(
         window.__REACT_DEVTOOLS_GLOBAL_HOOK__?.renderers.values()
       )[0];
+      if (!reactRenderer) return;
       element = reactRenderer.findFiberByHostInstance(element);
 
       return ((el) => {
@@ -249,12 +269,10 @@
     }
 
     function showTooltip(element) {
-      if (!source) return;
-
       if (!tooltipElement) {
         tooltipElement = document.createElement("div");
         tooltipElement.style.position = "fixed";
-        tooltipElement.style.background = "#008DDAEE";
+        tooltipElement.style.background = source ? "#008DDAEE" : "#666666EE";
         tooltipElement.style.color = "rgba(255, 255, 255, 1)";
         tooltipElement.style.minWidth = "min-content";
         tooltipElement.style.maxWidth = "38ch";
@@ -262,7 +280,7 @@
         tooltipElement.style.borderRadius = "4px";
         tooltipElement.style.overflowWrap = "break-word";
         tooltipElement.style.wordBreak = "keep-all";
-        tooltipElement.style.zIndex = Z_INDEX_MAX;
+        tooltipElement.style.zIndex = Z_INDEX_TOOLTIP;
         tooltipElement.style.fontSize = "14px";
         tooltipElement.style.lineHeight = "1.4";
         tooltipElement.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.15)";
@@ -270,7 +288,7 @@
         document.body.appendChild(tooltipElement);
       }
 
-      tooltipElement.textContent = source;
+      tooltipElement.textContent = source || "No source found";
 
       const tooltipWidth = tooltipElement.offsetWidth;
       const tooltipHeight = tooltipElement.offsetHeight;
@@ -311,6 +329,83 @@
       }
     }
 
+    function showToast(text, duration = 2000) {
+      if (document.querySelector(".gps-guide")) {
+        document.querySelector(".gps-guide").remove();
+      }
+
+      if (document.querySelector(".gps-toast")) {
+        document.querySelector(".gps-toast").remove();
+      }
+
+      return new Promise((resolve) => {
+        const toast = document.createElement("div");
+        toast.className = "gps-toast";
+        toast.innerHTML = text;
+        toast.style.position = "fixed";
+        toast.style.top = "20px";
+        toast.style.right = "20px";
+        toast.style.padding = "10px 20px";
+        toast.style.backgroundColor = "rgba(0, 0, 0, 1)";
+        toast.style.color = "#fff";
+        toast.style.borderRadius = "4px";
+        toast.style.zIndex = Z_INDEX_TOAST;
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.3s ease-in-out";
+
+        document.body.appendChild(toast);
+
+        toast.addEventListener(
+          "transitionend",
+          () => {
+            resolve();
+          },
+          { once: true }
+        );
+
+        // 토스트 요소를 서서히 나타나게 함
+        setTimeout(() => {
+          toast.style.opacity = "1";
+        }, 100);
+
+        // duration 이후에 토스트 요소를 서서히 사라지게 함
+        setTimeout(() => {
+          toast.style.opacity = "0";
+          setTimeout(() => {
+            toast.remove();
+          }, 300);
+        }, duration);
+      });
+    }
+
+    function showGuide(text) {
+      if (document.querySelector(".gps-toast")) {
+        document.querySelector(".gps-guide")?.remove();
+        return;
+      }
+
+      const guide =
+        document.querySelector(".gps-guide") || document.createElement("div");
+      guide.className = "gps-guide";
+      guide.style.position = "fixed";
+      guide.style.top = "20px";
+      guide.style.right = "20px";
+      guide.style.padding = "10px 20px";
+      guide.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
+      guide.style.color = "#fff";
+      guide.style.borderRadius = "4px";
+      guide.style.zIndex = Z_INDEX_GUIDE;
+      guide.textContent = text;
+
+      document.body.appendChild(guide);
+    }
+
+    function hideGuide() {
+      const guide = document.querySelector(".gps-guide");
+      guide && guide.remove();
+    }
+
+    document.addEventListener("keydown", handleKeyDown, { capture: true });
     document.addEventListener("click", handleClick, { capture: true });
     document.addEventListener("mouseover", handleMouseOver, { capture: true });
     document.addEventListener("mouseout", handleMouseOut, { capture: true });
