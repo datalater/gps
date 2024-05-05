@@ -106,7 +106,7 @@ function save() {
 
   toast({
     container: document.querySelector(".button-wrapper"),
-    message: "Saved!",
+    message: "✅ Saved!",
   });
 }
 
