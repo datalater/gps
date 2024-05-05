@@ -49,23 +49,45 @@ function createItem({ id, checked, url, path, alias } = {}) {
   const item = document.createElement("li");
   item.className = "item";
 
-  item.innerHTML = `
+  item.innerHTML = /* html */ `
     <label for=${newId} class="label">
-      <input 
-        type="radio" 
-        id=${newId} 
-        name=${VARS.radioName} 
+      <input
+        type="radio"
+        id=${newId}
+        name=${VARS.radioName}
         ${Boolean(checked) ? "checked" : ""}
       />
       <input type="text" placeholder="URL" ${url ? `value="${url}"` : ""} />
-      <input type="text" placeholder="project path" ${
-        path ? `value="${path}"` : ""
-      } />
-      <input type="text" placeholder="alias (optional)" ${
-        alias ? `value="${alias}"` : ""
-      } />
+      <input
+        type="text"
+        placeholder="project path"
+        ${path ? `value="${path}"` : ""}
+      />
+      <input
+        type="text"
+        placeholder="alias (optional)"
+        ${alias ? `value="${alias}"` : ""}
+      />
     </label>
-    <button class="remove">X</button>
+    <button class="copy-path" title="copy project path">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+      >
+        <path fill="none" d="M0 0h24v24H0z" />
+        <path
+          d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+        />
+      </svg>
+    </button>
+    <button class="remove" title="remove">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+        <path fill="none" d="M0 0h24v24H0z"/>
+        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+      </svg>
+    </button>
   `;
 
   const removeButton = item.querySelector(".remove");
@@ -82,6 +104,17 @@ function createItem({ id, checked, url, path, alias } = {}) {
     });
 
     save();
+  });
+
+  const copyButton = item.querySelector(".copy-path");
+  copyButton.addEventListener("click", () => {
+    const pathInput = item.querySelector('input[placeholder="project path"]');
+    navigator.clipboard.writeText(pathInput.value);
+
+    toast({
+      container: document.querySelector(".button-wrapper"),
+      message: "✅ Copied!",
+    });
   });
 
   return item;
