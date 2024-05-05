@@ -46,6 +46,7 @@ git clone https://github.com/datalater/gps.git
 - [Chrome for Developers - 콘텐츠 스크립트](https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts?hl=ko#static-declarative)
 - [Chrome for Developers - chrome.scripting](https://developer.chrome.com/docs/extensions/reference/api/scripting?hl=ko#type-ExecutionWorld)
 - [GoogleChrome/chrome-extensions-samples: images](https://github.com/GoogleChrome/chrome-extensions-samples/tree/main/functional-samples/tutorial.reading-time/images)
+- [Extensions Reloader](https://chromewebstore.google.com/detail/extensions-reloader/fimgfedafeadlieiabdeeaodndnlbhid)
 
 아이콘:
 

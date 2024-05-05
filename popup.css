@@ -1,0 +1,49 @@
+:root {
+  --padding: 15px;
+}
+
+body {
+  padding: var(--padding);
+  width: 600px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: 18px;
+}
+
+.button-wrapper {
+  display: flex;
+  gap: 4px;
+}
+
+.hgroup {
+  display: flex;
+  justify-content: space-between;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.label {
+  display: grid;
+  grid-template-columns: 0fr 2fr 2fr 1fr;
+  gap: 4px;
+}
