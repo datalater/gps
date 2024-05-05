@@ -2,11 +2,7 @@
   const Z_INDEX_MAX = 2147483647;
   const LOCAL_STORAGE_KEY = "gps-project-path";
 
-  say(
-    "GPS - Get Position of Source code is running.\n\n",
-    "Current project path: \n\n\t",
-    localStorage.getItem(LOCAL_STORAGE_KEY) || "Not set."
-  );
+  say("GPS - Get Position of Source code is running.");
 
   const CUSTOM_EVENTS = {
     optionKeyUp: "optionKeyUp",
@@ -37,6 +33,25 @@
     document.addEventListener("keydown", handleOptionKeyDown);
     document.addEventListener("keyup", handleKeyUp);
     document.addEventListener("scroll", handleScroll);
+  })();
+
+  (function initProjectPathHandler() {
+    function handleKeyDown(event) {
+      if (event.altKey && event.shiftKey && event.code === "KeyP") {
+        isOptionKeyPressed = false;
+
+        const currentProjectPath = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+        const projectPath = prompt(
+          `Project path를 설정해주세요.\n\ncurrent: ${currentProjectPath}`
+        );
+        if (projectPath) {
+          localStorage.setItem(LOCAL_STORAGE_KEY, projectPath);
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
   })();
 
   (function styler() {
