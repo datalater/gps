@@ -140,15 +140,19 @@
     let source = null;
     let tooltipElement = null;
     let hoveredElement = null;
+    let mouseX;
+    let mouseY;
+    let overlayInlinePosition = "right";
 
     const showShortcutGuide = () =>
-      showGuide("Press (c) to copy / (p) to set project path");
+      showGuide("Press <br/> (c) to copy <br/> (p) to set project path");
 
     async function handleKeyDown(event) {
-      if (source && event.altKey && event.code === "KeyC") {
-        navigator.clipboard.writeText(source);
+      if (!source || !event.altKey) return;
 
-        await showToast("Copied to clipboard");
+      if (event.code === "KeyC") {
+        navigator.clipboard.writeText(source);
+        await showToast("✅ Copied to clipboard");
       }
     }
 
@@ -171,6 +175,15 @@
 
       if (!event.altKey) return;
       if (el === event.target) return;
+
+      mouseX = event.clientX;
+      mouseY = event.clientY;
+
+      if (mouseX > window.innerWidth / 2 && mouseY < window.innerHeight / 2) {
+        overlayInlinePosition = "left";
+      } else {
+        overlayInlinePosition = "right";
+      }
 
       el = event.target;
       source = getSource(el);
@@ -344,7 +357,7 @@
         toast.innerHTML = text;
         toast.style.position = "fixed";
         toast.style.top = "20px";
-        toast.style.right = "20px";
+        toast.style[overlayInlinePosition] = "20px";
         toast.style.padding = "10px 20px";
         toast.style.backgroundColor = "rgba(0, 0, 0, 1)";
         toast.style.color = "#fff";
@@ -389,13 +402,13 @@
       guide.className = "gps-guide";
       guide.style.position = "fixed";
       guide.style.top = "20px";
-      guide.style.right = "20px";
+      guide.style[overlayInlinePosition] = "20px";
       guide.style.padding = "10px 20px";
       guide.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
       guide.style.color = "#fff";
       guide.style.borderRadius = "4px";
       guide.style.zIndex = Z_INDEX_GUIDE;
-      guide.textContent = text;
+      guide.innerHTML = text;
 
       document.body.appendChild(guide);
     }
