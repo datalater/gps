@@ -78,3 +78,7 @@ ol {
 button {
   cursor: pointer;
 }
+
+input[type="radio"] {
+  cursor: pointer;
+}
