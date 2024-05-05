@@ -142,12 +142,12 @@
     let hoveredElement = null;
     let mouseX;
     let mouseY;
-    let overlayInlinePosition = "right";
     const overlayMargin = "10px";
-    const overlayPadding = "8px 12px";
+    const overlayPadding = "8px 16px";
 
-    const showShortcutGuide = () =>
-      showGuide("Press <br/> (c) to copy <br/> (p) to set project path");
+    const showShortcutGuide = () => {
+      showGuide("Press (c) to copy, (p) to set project path");
+    };
 
     async function handleKeyDown(event) {
       if (!source || !event.altKey) return;
@@ -287,7 +287,7 @@
       if (!tooltipElement) {
         tooltipElement = document.createElement("div");
         tooltipElement.style.position = "fixed";
-        tooltipElement.style.background = source ? "#008DDAEE" : "#666666EE";
+        tooltipElement.style.background = source ? "#008DDA" : "#666666";
         tooltipElement.style.color = "rgba(255, 255, 255, 1)";
         tooltipElement.style.minWidth = "min-content";
         tooltipElement.style.maxWidth = "38ch";
@@ -327,14 +327,6 @@
 
       tooltipElement.style.left = `${left}px`;
       tooltipElement.style.top = `${top}px`;
-
-      /*
-      devtool(
-        `tooltipElement: ${JSON.stringify(
-          tooltipElement.getBoundingClientRect()
-        )}`
-      );
-      */
     }
 
     function hideTooltip() {
@@ -354,21 +346,20 @@
       }
 
       return new Promise((resolve) => {
-        const toast = document.createElement("div");
+        const toast = createBottomIsland();
         toast.className = "gps-toast";
-        toast.innerHTML = text;
-        toast.style.position = "fixed";
-        toast.style.top = overlayMargin;
-        toast.style[overlayInlinePosition] = overlayMargin;
-        toast.style.padding = overlayPadding;
-        toast.style.backgroundColor = "rgba(0, 0, 0, 1)";
-        toast.style.color = "#fff";
-        toast.style.borderRadius = "4px";
-        toast.style.fontSize = "14px";
-        toast.style.lineHeight = "1.4";
         toast.style.zIndex = Z_INDEX_TOAST;
         toast.style.opacity = "0";
         toast.style.transition = "opacity 0.3s ease-in-out";
+        toast.innerHTML = text;
+
+        if (isTablet()) {
+          toast.style.bottom = overlayMargin;
+          toast.style.width = "calc(100% - 20px)";
+          toast.style.fontSize = "14px";
+        } else {
+          toast.style.bottom = overlayMargin;
+        }
 
         document.body.appendChild(toast);
 
@@ -402,19 +393,18 @@
       }
 
       const guide =
-        document.querySelector(".gps-guide") || document.createElement("div");
+        document.querySelector(".gps-guide") || createBottomIsland();
       guide.className = "gps-guide";
-      guide.style.position = "fixed";
-      guide.style.top = overlayMargin;
-      guide.style[overlayInlinePosition] = overlayMargin;
-      guide.style.padding = overlayPadding;
-      guide.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
-      guide.style.color = "#fff";
-      guide.style.borderRadius = "4px";
-      guide.style.fontSize = "14px";
-      guide.style.lineHeight = "1.4";
       guide.style.zIndex = Z_INDEX_GUIDE;
       guide.innerHTML = text;
+
+      if (isTablet()) {
+        guide.style.bottom = overlayMargin;
+        guide.style.width = "calc(100% - 20px)";
+        guide.style.fontSize = "14px";
+      } else {
+        guide.style.bottom = overlayMargin;
+      }
 
       document.body.appendChild(guide);
     }
@@ -422,6 +412,21 @@
     function hideGuide() {
       const guide = document.querySelector(".gps-guide");
       guide && guide.remove();
+    }
+
+    function createBottomIsland() {
+      const element = document.createElement("div");
+      element.style.position = "fixed";
+      element.style.left = "50%";
+      element.style.transform = "translateX(-50%)";
+      element.style.textAlign = "center";
+      element.style.padding = overlayPadding;
+      element.style.backgroundColor = "rgba(0, 0, 0, 1)";
+      element.style.color = "#fff";
+      element.style.borderRadius = "4px";
+      element.style.lineHeight = "1.4";
+
+      return element;
     }
 
     document.addEventListener("keydown", handleKeyDown, { capture: true });
@@ -432,20 +437,8 @@
     document.addEventListener(CUSTOM_EVENTS.optionKeyDown, handleOptionKeyDown);
   })();
 
-  function devtool(textContent) {
-    let devtool = document.querySelector(".devtool");
-
-    if (!devtool) {
-      devtool = document.createElement("div");
-      devtool.classList.add("devtool");
-      document.body.insertBefore(devtool, document.body.firstChild);
-    }
-
-    devtool.innerHTML = `
-    <div style="position: fixed; top: 8px; left: 8px; z-index: 9999; background-color: rgba(10,10,10,0.8); color: #FFD700; max-width: 600px; overflow-wrap: anywhere; line-height: 1.4; padding: 8px 12px; text-align: center; border: 1px solid; border-radius: 15px; line-height: 1.5;">
-      <span>${textContent}</span>
-    </div>
-  `;
+  function isTablet() {
+    return window.matchMedia("(max-width: 768px)").matches;
   }
 
   function say(...messages) {
