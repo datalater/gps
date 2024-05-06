@@ -346,22 +346,13 @@
       }
 
       return new Promise((resolve) => {
-        const toast = createBottomIsland();
-        toast.className = "gps-toast";
-        toast.style.zIndex = Z_INDEX_TOAST;
-        toast.style.opacity = "0";
-        toast.style.transition = "opacity 0.3s ease-in-out";
+        const toast = createBottomIsland({
+          zIndex: Z_INDEX_TOAST,
+          opacity: 0,
+          transition: "opacity 0.3s ease-in-out",
+        });
+        toast.classList.add("gps-toast");
         toast.innerHTML = text;
-
-        if (isTablet()) {
-          toast.style.bottom = overlayMargin;
-          toast.style.width = "calc(100% - 20px)";
-          toast.style.fontSize = "14px";
-        } else {
-          toast.style.bottom = overlayMargin;
-        }
-
-        document.body.appendChild(toast);
 
         toast.addEventListener(
           "transitionend",
@@ -393,20 +384,12 @@
       }
 
       const guide =
-        document.querySelector(".gps-guide") || createBottomIsland();
-      guide.className = "gps-guide";
-      guide.style.zIndex = Z_INDEX_GUIDE;
+        document.querySelector(".gps-guide") ||
+        createBottomIsland({
+          zIndex: Z_INDEX_GUIDE,
+        });
+      guide.classList.add("gps-guide");
       guide.innerHTML = text;
-
-      if (isTablet()) {
-        guide.style.bottom = overlayMargin;
-        guide.style.width = "calc(100% - 20px)";
-        guide.style.fontSize = "14px";
-      } else {
-        guide.style.bottom = overlayMargin;
-      }
-
-      document.body.appendChild(guide);
     }
 
     function hideGuide() {
@@ -414,9 +397,11 @@
       guide && guide.remove();
     }
 
-    function createBottomIsland() {
+    function createBottomIsland(styleProps = {}) {
       const element = document.createElement("div");
+      element.classList.add("gps-bottom-island");
       element.style.position = "fixed";
+      element.style.bottom = overlayMargin;
       element.style.left = "50%";
       element.style.transform = "translateX(-50%)";
       element.style.textAlign = "center";
@@ -424,7 +409,23 @@
       element.style.backgroundColor = "rgba(0, 0, 0, 1)";
       element.style.color = "#fff";
       element.style.borderRadius = "4px";
+      element.style.fontSize = "16px";
       element.style.lineHeight = "1.4";
+      Object.assign(element.style, styleProps);
+
+      document.body.appendChild(element);
+
+      const style = document.createElement("style");
+      style.id = "gps-bottom-island-style";
+      style.textContent = `
+        .gps-bottom-island {
+          @media (max-width: 768px) {
+            width: calc(100% - 40px);
+            font-size: 14px;
+          }
+        }
+      `;
+      document.head.appendChild(style);
 
       return element;
     }
@@ -436,10 +437,6 @@
     document.addEventListener(CUSTOM_EVENTS.optionKeyUp, handleOptionKeyUp);
     document.addEventListener(CUSTOM_EVENTS.optionKeyDown, handleOptionKeyDown);
   })();
-
-  function isTablet() {
-    return window.matchMedia("(max-width: 768px)").matches;
-  }
 
   function say(...messages) {
     const prefix = "📌";
