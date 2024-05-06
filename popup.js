@@ -109,7 +109,23 @@ function createItem({ id, checked, url, path, alias } = {}) {
   const copyButton = item.querySelector(".copy-path");
   copyButton.addEventListener("click", () => {
     const pathInput = item.querySelector('input[placeholder="project path"]');
+
     navigator.clipboard.writeText(pathInput.value);
+
+    pathInput.animate([{ outline: "0px" }, { outline: "#008DDA auto 1px" }], {
+      duration: 500,
+      fill: "forwards",
+    }).onfinish = () => {
+      setTimeout(() => {
+        pathInput.animate(
+          [{ outline: "#008DDA auto 1px" }, { outline: "0px" }],
+          {
+            duration: 500,
+            fill: "forwards",
+          }
+        );
+      }, 1000);
+    };
 
     toast({
       container: document.querySelector(".button-wrapper"),
