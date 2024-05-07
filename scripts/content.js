@@ -383,6 +383,8 @@
         return;
       }
 
+      if (!source) return;
+
       const guide =
         document.querySelector(".gps-guide") ||
         createBottomIsland({
