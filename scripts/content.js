@@ -1,12 +1,11 @@
 (function fn() {
   const Z_INDEX_MAX = 2147483647;
+  const Z_INDEX_TOAST = Z_INDEX_MAX - 1;
+  const Z_INDEX_GUIDE = Z_INDEX_MAX - 2;
+  const Z_INDEX_TOOLTIP = Z_INDEX_MAX - 3;
   const LOCAL_STORAGE_KEY = "gps-project-path";
 
-  say(
-    "GPS - Get Position of Source code is running.\n\n",
-    "Current project path: \n\n\t",
-    localStorage.getItem(LOCAL_STORAGE_KEY) || "Not set."
-  );
+  say("GPS - Get Position of Source code is running.");
 
   const CUSTOM_EVENTS = {
     optionKeyUp: "optionKeyUp",
@@ -37,6 +36,27 @@
     document.addEventListener("keydown", handleOptionKeyDown);
     document.addEventListener("keyup", handleKeyUp);
     document.addEventListener("scroll", handleScroll);
+  })();
+
+  (function initProjectPathHandler() {
+    function handleKeyDown(event) {
+      if (event.altKey && event.code === "KeyP") {
+        const currentProjectPath = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+        const projectPath = prompt(
+          `Project path를 설정해주세요.\n\ncurrent: ${currentProjectPath}`
+        );
+
+        if (projectPath) {
+          localStorage.setItem(LOCAL_STORAGE_KEY, projectPath);
+        }
+
+        isOptionKeyPressed = false;
+        document.dispatchEvent(new CustomEvent(CUSTOM_EVENTS.optionKeyUp));
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
   })();
 
   (function styler() {
@@ -118,20 +138,38 @@
   (function locator() {
     let el = null;
     let source = null;
-    let projectPath = null;
     let tooltipElement = null;
     let hoveredElement = null;
+    let mouseX;
+    let mouseY;
+    const overlayMargin = "10px";
+    const overlayPadding = "8px 16px";
+
+    const showShortcutGuide = () => {
+      showGuide("Press (c) to copy, (p) to set project path");
+    };
+
+    async function handleKeyDown(event) {
+      if (!source || !event.altKey) return;
+
+      if (event.code === "KeyC") {
+        navigator.clipboard.writeText(source);
+        await showToast("✅ Copied to clipboard");
+      }
+    }
 
     function handleOptionKeyDown() {
       if (hoveredElement) {
         el = hoveredElement;
         source = getSource(el);
         showTooltip(el);
+        showShortcutGuide();
       }
     }
 
     function handleOptionKeyUp() {
       hideTooltip();
+      hideGuide();
     }
 
     function handleMouseOver(event) {
@@ -140,10 +178,20 @@
       if (!event.altKey) return;
       if (el === event.target) return;
 
+      mouseX = event.clientX;
+      mouseY = event.clientY;
+
+      if (mouseX > window.innerWidth / 2 && mouseY < window.innerHeight / 2) {
+        overlayInlinePosition = "left";
+      } else {
+        overlayInlinePosition = "right";
+      }
+
       el = event.target;
       source = getSource(el);
 
       showTooltip(el);
+      showShortcutGuide();
     }
 
     function handleMouseOut(event) {
@@ -152,6 +200,7 @@
       if (el === event.target) {
         el = null;
         hideTooltip();
+        hideGuide();
       }
     }
 
@@ -221,6 +270,7 @@
       const reactRenderer = Array.from(
         window.__REACT_DEVTOOLS_GLOBAL_HOOK__?.renderers.values()
       )[0];
+      if (!reactRenderer) return;
       element = reactRenderer.findFiberByHostInstance(element);
 
       return ((el) => {
@@ -234,20 +284,18 @@
     }
 
     function showTooltip(element) {
-      if (!source) return;
-
       if (!tooltipElement) {
         tooltipElement = document.createElement("div");
         tooltipElement.style.position = "fixed";
-        tooltipElement.style.background = "#008DDAEE";
+        tooltipElement.style.background = source ? "#008DDA" : "#666666";
         tooltipElement.style.color = "rgba(255, 255, 255, 1)";
         tooltipElement.style.minWidth = "min-content";
         tooltipElement.style.maxWidth = "38ch";
-        tooltipElement.style.padding = "8px 12px";
+        tooltipElement.style.padding = overlayPadding;
         tooltipElement.style.borderRadius = "4px";
         tooltipElement.style.overflowWrap = "break-word";
         tooltipElement.style.wordBreak = "keep-all";
-        tooltipElement.style.zIndex = Z_INDEX_MAX;
+        tooltipElement.style.zIndex = Z_INDEX_TOOLTIP;
         tooltipElement.style.fontSize = "14px";
         tooltipElement.style.lineHeight = "1.4";
         tooltipElement.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.15)";
@@ -255,7 +303,7 @@
         document.body.appendChild(tooltipElement);
       }
 
-      tooltipElement.textContent = source;
+      tooltipElement.textContent = source || "No source found";
 
       const tooltipWidth = tooltipElement.offsetWidth;
       const tooltipHeight = tooltipElement.offsetHeight;
@@ -279,14 +327,6 @@
 
       tooltipElement.style.left = `${left}px`;
       tooltipElement.style.top = `${top}px`;
-
-      /*
-      devtool(
-        `tooltipElement: ${JSON.stringify(
-          tooltipElement.getBoundingClientRect()
-        )}`
-      );
-      */
     }
 
     function hideTooltip() {
@@ -296,28 +336,109 @@
       }
     }
 
+    function showToast(text, duration = 2000) {
+      if (document.querySelector(".gps-guide")) {
+        document.querySelector(".gps-guide").remove();
+      }
+
+      if (document.querySelector(".gps-toast")) {
+        document.querySelector(".gps-toast").remove();
+      }
+
+      return new Promise((resolve) => {
+        const toast = createBottomIsland({
+          zIndex: Z_INDEX_TOAST,
+          opacity: 0,
+          transition: "opacity 0.3s ease-in-out",
+        });
+        toast.classList.add("gps-toast");
+        toast.innerHTML = text;
+
+        toast.addEventListener(
+          "transitionend",
+          () => {
+            resolve();
+          },
+          { once: true }
+        );
+
+        // 토스트 요소를 서서히 나타나게 함
+        setTimeout(() => {
+          toast.style.opacity = "1";
+        }, 100);
+
+        // duration 이후에 토스트 요소를 서서히 사라지게 함
+        setTimeout(() => {
+          toast.style.opacity = "0";
+          setTimeout(() => {
+            toast.remove();
+          }, 300);
+        }, duration);
+      });
+    }
+
+    function showGuide(text) {
+      if (document.querySelector(".gps-toast")) {
+        document.querySelector(".gps-guide")?.remove();
+        return;
+      }
+
+      if (!source) return;
+
+      const guide =
+        document.querySelector(".gps-guide") ||
+        createBottomIsland({
+          zIndex: Z_INDEX_GUIDE,
+        });
+      guide.classList.add("gps-guide");
+      guide.innerHTML = text;
+    }
+
+    function hideGuide() {
+      const guide = document.querySelector(".gps-guide");
+      guide && guide.remove();
+    }
+
+    function createBottomIsland(styleProps = {}) {
+      const element = document.createElement("div");
+      element.classList.add("gps-bottom-island");
+      element.style.position = "fixed";
+      element.style.bottom = overlayMargin;
+      element.style.left = "50%";
+      element.style.transform = "translateX(-50%)";
+      element.style.textAlign = "center";
+      element.style.padding = overlayPadding;
+      element.style.backgroundColor = "rgba(0, 0, 0, 1)";
+      element.style.color = "#fff";
+      element.style.borderRadius = "4px";
+      element.style.fontSize = "16px";
+      element.style.lineHeight = "1.4";
+      Object.assign(element.style, styleProps);
+
+      document.body.appendChild(element);
+
+      const style = document.createElement("style");
+      style.id = "gps-bottom-island-style";
+      style.textContent = `
+        .gps-bottom-island {
+          @media (max-width: 768px) {
+            width: calc(100% - 40px);
+            font-size: 14px;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+
+      return element;
+    }
+
+    document.addEventListener("keydown", handleKeyDown, { capture: true });
     document.addEventListener("click", handleClick, { capture: true });
     document.addEventListener("mouseover", handleMouseOver, { capture: true });
     document.addEventListener("mouseout", handleMouseOut, { capture: true });
     document.addEventListener(CUSTOM_EVENTS.optionKeyUp, handleOptionKeyUp);
     document.addEventListener(CUSTOM_EVENTS.optionKeyDown, handleOptionKeyDown);
   })();
-
-  function devtool(textContent) {
-    let devtool = document.querySelector(".devtool");
-
-    if (!devtool) {
-      devtool = document.createElement("div");
-      devtool.classList.add("devtool");
-      document.body.insertBefore(devtool, document.body.firstChild);
-    }
-
-    devtool.innerHTML = `
-    <div style="position: fixed; top: 8px; left: 8px; z-index: 9999; background-color: rgba(10,10,10,0.8); color: #FFD700; max-width: 600px; overflow-wrap: anywhere; line-height: 1.4; padding: 8px 12px; text-align: center; border: 1px solid; border-radius: 15px; line-height: 1.5;">
-      <span>${textContent}</span>
-    </div>
-  `;
-  }
 
   function say(...messages) {
     const prefix = "📌";
